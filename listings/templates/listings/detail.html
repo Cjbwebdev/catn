@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{ listing.title }}</h1>
+
+<p>£{{ listing.price }}</p>
+<p>{{ listing.location }}</p>
+
+<div>
+
+{% for img in listing.image_urls %}
+<img src="{{ img }}" width="400">
+{% endfor %}
+
+</div>
+
+<p>{{ listing.description }}</p>
+
+<a href="{{ listing.listing_url }}" target="_blank">
+View original listing
+</a>
+
+{% endblock %}

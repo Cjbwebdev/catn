@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Cat N Vehicles</h1>
+
+<form method="get">
+    <input name="q" placeholder="Search...">
+    <button type="submit">Search</button>
+</form>
+
+<div class="grid">
+
+{% for listing in listings %}
+
+<a href="{% url 'listing_detail' listing.id %}">
+
+    <img src="{{ listing.image_urls.0 }}" width="250">
+
+    <h3>{{ listing.title }}</h3>
+
+    <p>£{{ listing.price }}</p>
+
+    <p>{{ listing.source.name }}</p>
+
+</a>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}
