@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>{% block title %}Cat N Vehicles | catn.site{% endblock %}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="Browse Cat N vehicles for sale across Copart, eBay, Gumtree and more.">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine (optional for UI interactions) -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <link rel="icon" href="/static/favicon.ico">
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-gray-100 text-gray-900 flex flex-col min-h-screen">
+
+<!-- NAVBAR -->
+<header class="bg-white shadow">
+
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+        <!-- Logo -->
+        <a href="/" class="text-2xl font-bold text-blue-600">
+            catn.site
+        </a>
+
+        <!-- Navigation -->
+        <nav class="flex items-center space-x-6">
+
+            <a href="/" class="hover:text-blue-600">Listings</a>
+
+            {% if user.is_authenticated %}
+
+                <span class="text-gray-500 text-sm">
+                    {{ user.username }}
+                </span>
+
+                {% if user.has_full_access %}
+                    <span class="text-green-600 text-sm font-semibold">
+                        Premium
+                    </span>
+                {% endif %}
+
+                <a href="{#}" class="hover:text-red-600">
+                    Logout
+                </a>
+
+            {% else %}
+
+                <a href="{#}" class="hover:text-blue-600">
+                    Login
+                </a>
+
+                <a href="{#}"
+                   class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Sign up
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<!-- SEARCH / FILTER BAR -->
+<section class="bg-gray-50 border-b">
+
+    <div class="max-w-7xl mx-auto px-6 py-4">
+
+        <form method="get" action="/" class="flex flex-wrap gap-4">
+
+            <!-- Search -->
+            <input
+                type="text"
+                name="q"
+                value="{{ request.GET.q }}"
+                placeholder="Search cars..."
+                class="border rounded px-4 py-2 w-64"
+            >
+
+            <!-- Source -->
+            <select name="source" class="border rounded px-4 py-2">
+
+                <option value="">All Sources</option>
+
+                {% for s in sources %}
+                    <option value="{{ s.name }}"
+                        {% if request.GET.source == s.name %}selected{% endif %}>
+                        {{ s.name }}
+                    </option>
+                {% endfor %}
+
+            </select>
+
+            <!-- Price -->
+            <input
+                type="number"
+                name="min_price"
+                placeholder="Min £"
+                class="border rounded px-4 py-2 w-32"
+            >
+
+            <input
+                type="number"
+                name="max_price"
+                placeholder="Max £"
+                class="border rounded px-4 py-2 w-32"
+            >
+
+            <button
+                type="submit"
+                class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
+            >
+                Search
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<!-- FLASH MESSAGES -->
+{% if messages %}
+<div class="max-w-7xl mx-auto px-6 mt-4">
+
+    {% for message in messages %}
+
+        <div class="p-4 mb-2 rounded bg-green-100 text-green-800">
+            {{ message }}
+        </div>
+
+    {% endfor %}
+
+</div>
+{% endif %}
+
+
+<!-- MAIN CONTENT -->
+<main class="flex-grow">
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+
+        {% block content %}
+        {% endblock %}
+
+    </div>
+
+</main>
+
+
+<!-- FOOTER -->
+<footer class="bg-white border-t mt-10">
+
+    <div class="max-w-7xl mx-auto px-6 py-6 text-sm text-gray-500 flex justify-between">
+
+        <div>
+            © {% now "Y" %} catn.site
+        </div>
+
+        <div class="space-x-4">
+
+            <a href="#" class="hover:text-blue-600">About</a>
+            <a href="#" class="hover:text-blue-600">Privacy</a>
+            <a href="#" class="hover:text-blue-600">Terms</a>
+
+        </div>
+
+    </div>
+
+</footer>
+
+</body>
+</html>

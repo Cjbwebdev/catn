@@ -1,6 +1,7 @@
 import stripe
 from django.conf import settings
 from accounts.models import User, Subscription
+from django.http import HttpResponse
 
 
 def stripe_webhook(request):
