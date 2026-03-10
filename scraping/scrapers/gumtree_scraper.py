@@ -36,9 +36,9 @@ class GumtreeScraper:
                 print(f"[{self.source_name}] Raw items found: {len(items)}")
 
                 for item in items:
-                    # Clean price
-                    price_str = item.get("price") or ""
-                    match = re.search(r"£?([\d,]+)", price_str)
+                    # Clean price - fall back to extracting from title if selector returns None
+                    price_str = item.get("price") or item.get("title") or ""
+                    match = re.search(r"£([\d,]+)", price_str)
                     price_cleaned = float(match.group(1).replace(",", "")) if match else None
 
                     # Clean title

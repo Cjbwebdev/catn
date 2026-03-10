@@ -24,7 +24,7 @@ class Command(BaseCommand):
                 name=scraper.source_name
             )
 
-            listings = scraper.run(headless=False)
+            listings = scraper.run(headless=True)
 
             print("Listings scraped:", len(listings))
 
