@@ -2,31 +2,389 @@
 
 {% block content %}
 
-<h1>Cat N Vehicles</h1>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap');
 
-<form method="get">
-    <input name="q" placeholder="Search...">
-    <button type="submit">Search</button>
-</form>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<div class="grid">
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: #f3f3f3;
+    color: #111;
+  }
 
-{% for listing in listings %}
+  /* ── Header ── */
+  .site-header {
+    background: #e53238;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
 
-<a href="{% url 'listing_detail' listing.id %}">
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 
-    <img src="{{ listing.image_urls.0 }}" width="250">
+  .site-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    white-space: nowrap;
+    text-shadow: 1px 2px 0 rgba(0,0,0,0.18);
+    flex-shrink: 0;
+  }
+  .site-logo span { color: #ffd140; }
 
-    <h3>{{ listing.title }}</h3>
+  /* ── Search bar ── */
+  .search-form {
+    display: flex;
+    flex: 1;
+    max-width: 700px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid #fff;
+    background: #fff;
+  }
 
-    <p>£{{ listing.price }}</p>
+  .search-form input {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 1rem;
+    font-family: 'Barlow', sans-serif;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #111;
+  }
 
-    <p>{{ listing.source.name }}</p>
+  .search-form input::placeholder { color: #999; }
 
-</a>
+  .search-form button {
+    background: #ffd140;
+    border: none;
+    padding: 10px 22px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #111;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .search-form button:hover { background: #f5c400; }
 
-{% endfor %}
+  /* ── Sub-nav ── */
+  .sub-nav {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 0 24px;
+  }
+  .sub-nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 42px;
+    overflow-x: auto;
+  }
+  .sub-nav a {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sub-nav a:hover, .sub-nav a.active {
+    background: #e53238;
+    color: #fff;
+  }
 
-</div>
+  /* ── Page body ── */
+  .page-body {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 24px 48px;
+  }
+
+  .results-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .results-count {
+    font-size: 0.92rem;
+    color: #555;
+  }
+  .results-count strong { color: #111; }
+
+  .sort-select {
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.88rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 10px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+  }
+
+  /* ── Listings grid ── */
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+    position: relative;
+  }
+  .card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    transform: translateY(-2px);
+    border-color: #e53238;
+  }
+
+  .card-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: 70%;
+    background: #f7f7f7;
+    overflow: hidden;
+  }
+  .card-img-wrap img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .card:hover .card-img-wrap img { transform: scale(1.04); }
+
+  /* Watchlist heart */
+  .card-watch {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255,255,255,0.88);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: background 0.15s, border-color 0.15s;
+    font-size: 15px;
+    color: #aaa;
+  }
+  .card-watch:hover { background: #fff; border-color: #e53238; color: #e53238; }
+
+  /* Condition badge */
+  .card-condition {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #111;
+    color: #ffd140;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    z-index: 2;
+  }
+
+  .card-body {
+    padding: 12px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 5px;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #111;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.4em;
+  }
+
+  .card-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #e53238;
+    letter-spacing: -0.5px;
+    margin-top: 2px;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px solid #f0f0f0;
+    gap: 6px;
+  }
+
+  .card-source {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0064d2;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-bid-btn {
+    background: #e53238;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    letter-spacing: 0.4px;
+  }
+  .card-bid-btn:hover { background: #c0272d; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #888;
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 1.2rem; font-weight: 700; color: #444; margin-bottom: 6px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .header-top { padding: 10px 12px; gap: 10px; }
+    .site-logo { font-size: 1.4rem; }
+    .page-body { padding: 14px 12px 40px; }
+    .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  }
+</style>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-top">
+    <div class="site-logo">Cat<span>N</span></div>
+    <form method="get" class="search-form">
+      <input name="q" placeholder="Search salvage vehicles..." value="{{ request.GET.q }}">
+      <button type="submit">Search</button>
+    </form>
+  </div>
+</header>
+
+<!-- Sub-nav -->
+<nav class="sub-nav">
+  <div class="sub-nav-inner">
+    <a href="#" class="active">All Vehicles</a>
+    <a href="#">Cars</a>
+    <a href="#">Vans</a>
+    <a href="#">Motorcycles</a>
+    <a href="#">HGV / Trucks</a>
+    <a href="#">Parts</a>
+    <a href="#">New Listings</a>
+  </div>
+</nav>
+
+<!-- Main content -->
+<main class="page-body">
+
+  <div class="results-meta">
+    <p class="results-count">
+      <strong>{{ listings|length }}</strong> result{% if listings|length != 1 %}s{% endif %} found
+    </p>
+    <select class="sort-select" onchange="window.location.search = '?sort='+this.value">
+      <option value="newest">Newest first</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+    </select>
+  </div>
+
+  {% if listings %}
+  <div class="listings-grid">
+    {% for listing in listings %}
+    <a class="card" href="{% url 'listing_detail' listing.id %}">
+
+      <div class="card-img-wrap">
+        {% if listing.image_urls.0 %}
+          <img src="{{ listing.image_urls.0 }}" alt="{{ listing.title }}" loading="lazy">
+        {% else %}
+          <img src="https://via.placeholder.com/400x280?text=No+Image" alt="No image">
+        {% endif %}
+        <span class="card-condition">Cat N</span>
+        <span class="card-watch" title="Watch this listing" onclick="event.preventDefault()">♡</span>
+      </div>
+
+      <div class="card-body">
+        <p class="card-title">{{ listing.title }}</p>
+        <p class="card-price">£{{ listing.price }}</p>
+        <div class="card-footer">
+          <span class="card-source">{{ listing.source.name }}</span>
+          <button class="card-bid-btn" onclick="event.preventDefault(); window.location.href=this.closest('a').href">
+            View
+          </button>
+        </div>
+      </div>
+
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🚗</div>
+    <h3>No vehicles found</h3>
+    <p>Try adjusting your search or browse all listings.</p>
+  </div>
+  {% endif %}
+
+</main>
 
 {% endblock %}

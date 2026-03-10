@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
             print(f"\nRunning scraper: {scraper.source_name}")
 
-            source,_ = SourceSite.objects.get_or_create(
+            source, _ = SourceSite.objects.get_or_create(
                 name=scraper.source_name
             )
 
@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
             print("Listings scraped:", len(listings))
 
-            save_listings(source,listings)
+            save_listings(source, listings)
 
             total += len(listings)
 
