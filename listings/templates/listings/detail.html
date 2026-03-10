@@ -1,24 +1,320 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  :root{
+    --accent:#e53238;
+    --accent-dark:#c0272d;
+    --muted:#777;
+    --card-bg:#fff;
+    --radius:10px;
+    --max-width:1100px;
+  }
+  .listing-wrap{
+    max-width:var(--max-width);
+    margin:28px auto;
+    padding:20px;
+    background:transparent;
+  }
 
-<h1>{{ listing.title }}</h1>
+  /* Top area */
+  .listing-top{
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:980px){
+    .listing-top{ grid-template-columns: 1fr; }
+  }
 
-<p>£{{ listing.price }}</p>
-<p>{{ listing.location }}</p>
+  /* Gallery */
+  .gallery{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    overflow:hidden;
+    border:1px solid #e9e9e9;
+  }
+  .gallery-main{
+    width:100%;
+    height:420px;
+    background:#f6f6f6 center/cover no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .gallery-main img{ max-width:100%; max-height:100%; object-fit:contain; display:block; }
+  .gallery-thumbs{
+    display:flex;
+    gap:8px;
+    padding:10px;
+    overflow:auto;
+    background:#fff;
+  }
+  .gallery-thumbs button{
+    border:1px solid #eee;
+    background:#fff;
+    padding:4px;
+    border-radius:6px;
+    cursor:pointer;
+    width:72px;
+    height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .gallery-thumbs img{ max-width:100%; max-height:100%; object-fit:cover; display:block; }
 
-<div>
+  /* Info card */
+  .info-card{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    padding:18px;
+    border:1px solid #e9e9e9;
+    box-shadow:0 6px 20px rgba(0,0,0,0.04);
+    position:sticky;
+    top:20px;
+    height:fit-content;
+  }
+  .listing-title{
+    font-size:1.25rem;
+    font-weight:700;
+    margin-bottom:8px;
+    color:#111;
+  }
+  .listing-sub{
+    color:var(--muted);
+    font-size:0.95rem;
+    margin-bottom:12px;
+  }
 
-{% for img in listing.image_urls %}
-<img src="{{ img }}" width="400">
-{% endfor %}
+  .price-row{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .price{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:2rem;
+    color:var(--accent);
+    font-weight:800;
+    letter-spacing:-0.5px;
+  }
+  .price-note{ color:var(--muted); font-size:0.9rem; }
 
-</div>
+  .meta-list{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .meta-item{ background:#fafafa; padding:6px 10px; border-radius:6px; font-size:0.9rem; color:#444; border:1px solid #f0f0f0; }
 
-<p>{{ listing.description }}</p>
+  .cta-row{ display:flex; gap:10px; margin-top:10px; }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    font-weight:700;
+    text-decoration:none;
+  }
+  .btn-primary{ background:var(--accent); color:#fff; }
+  .btn-secondary{ background:#fff; color:var(--accent); border:1px solid #e9e9e9; }
 
-<a href="{{ listing.listing_url }}" target="_blank">
-View original listing
-</a>
+  /* Body content */
+  .listing-body{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap:20px;
+  }
+  @media (max-width:980px){
+    .listing-body{ grid-template-columns: 1fr; }
+  }
 
+  .panel{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    padding:16px;
+    border:1px solid #e9e9e9;
+  }
+  .panel h3{ margin-bottom:10px; font-size:1.05rem; }
+  .description{ color:#333; line-height:1.6; white-space:pre-wrap; }
+
+  .specs dl{ display:grid; grid-template-columns: 1fr 1fr; gap:8px 16px; }
+  .specs dt{ color:var(--muted); font-size:0.9rem; }
+  .specs dd{ margin:0; font-weight:600; color:#111; }
+
+  .seller{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .seller-avatar{
+    width:56px; height:56px; border-radius:8px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-weight:700; color:#666;
+  }
+  .seller-info{ font-size:0.95rem; }
+  .map-placeholder{ height:180px; background:#f6f6f6; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+
+  /* small helpers */
+  .badge{ display:inline-block; padding:6px 8px; border-radius:6px; background:#111; color:#ffd140; font-weight:700; font-family:'Barlow Condensed',sans-serif; font-size:0.75rem; }
+  .muted{ color:var(--muted); font-size:0.95rem; }
+</style>
+
+<main class="listing-wrap">
+
+  <div class="listing-top">
+    <!-- Gallery -->
+    <div>
+      <div class="gallery" aria-label="Image gallery">
+        <div id="galleryMain" class="gallery-main">
+          {% if listing.image_urls and listing.image_urls.0 %}
+            <img id="mainImg" src="{{ listing.image_urls.0 }}" alt="{{ listing.title }}">
+          {% else %}
+            <img id="mainImg" src="https://via.placeholder.com/800x500?text=No+Image" alt="No image">
+          {% endif %}
+        </div>
+
+        <div class="gallery-thumbs" id="thumbs">
+          {% if listing.image_urls %}
+            {% for img in listing.image_urls %}
+              <button type="button" data-src="{{ img }}">
+                <img src="{{ img }}" alt="thumb {{ forloop.counter }}">
+              </button>
+            {% endfor %}
+          {% else %}
+            <div style="padding:12px;color:var(--muted)">No additional images</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Info card -->
+    <aside class="info-card" aria-labelledby="listingTitle">
+      <div id="listingTitle" class="listing-title">{{ listing.title }}</div>
+      <div class="listing-sub">
+        <span class="badge">Cat N</span>
+        &nbsp;•&nbsp;
+        <span class="muted">{{ listing.location|default:"Location not provided" }}</span>
+      </div>
+
+      <div class="price-row">
+        {% if listing.price %}
+          <div class="price">£{{ listing.price }}</div>
+        {% else %}
+          <div class="price">Price unavailable</div>
+        {% endif %}
+        <div class="price-note">Estimated market value shown on original listing</div>
+      </div>
+
+      <div class="meta-list" aria-hidden="false">
+        <div class="meta-item">Condition: <strong>Cat N</strong></div>
+        {% if listing.odometer %}<div class="meta-item">Odometer: <strong>{{ listing.odometer }}</strong></div>{% endif %}
+        {% if listing.year %}<div class="meta-item">Year: <strong>{{ listing.year }}</strong></div>{% endif %}
+        {% if listing.make %}<div class="meta-item">Make: <strong>{{ listing.make }}</strong></div>{% endif %}
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="{{ listing.listing_url }}" target="_blank" rel="noopener">
+          View original listing
+        </a>
+        <a class="btn btn-secondary" href="#">
+          Contact seller
+        </a>
+      </div>
+
+      <div style="margin-top:12px;font-size:0.9rem;color:var(--muted)">
+        Source: <strong>{{ listing.source.name }}</strong>
+      </div>
+    </aside>
+  </div>
+
+  <hr style="border:none;height:18px">
+
+  <div class="listing-body">
+    <section class="panel">
+      <h3>Description</h3>
+      <div class="description">
+        {% if listing.description %}
+          {{ listing.description }}
+        {% else %}
+          <p class="muted">No description provided for this listing.</p>
+        {% endif %}
+      </div>
+
+      <h3 style="margin-top:18px">Key details</h3>
+      <div class="specs">
+        <dl>
+          <dt>Listing ID</dt><dd>{{ listing.external_id|default:"—" }}</dd>
+          <dt>Location</dt><dd>{{ listing.location|default:"—" }}</dd>
+          <dt>Price</dt><dd>{% if listing.price %}£{{ listing.price }}{% else %}—{% endif %}</dd>
+          <dt>Source</dt><dd>{{ listing.source.name }}</dd>
+          {% if listing.vin %}<dt>VIN</dt><dd>{{ listing.vin }}</dd>{% endif %}
+          {% if listing.transmission %}<dt>Transmission</dt><dd>{{ listing.transmission }}</dd>{% endif %}
+        </dl>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <h3>Seller</h3>
+        <div class="seller">
+          <div class="seller-avatar">{{ listing.source.name|slice:":1"|upper }}</div>
+          <div class="seller-info">
+            <div style="font-weight:700">{{ listing.source.name }}</div>
+            <div class="muted">External listing</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <a class="btn btn-secondary" href="#">Report listing</a>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h3>Location</h3>
+        <div class="map-placeholder">Map preview unavailable</div>
+        <div style="margin-top:8px" class="muted">Exact location withheld for privacy</div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h3>Share</h3>
+        <div style="display:flex;gap:8px">
+          <a class="btn btn-secondary" href="https://twitter.com/intent/tweet?text={{ listing.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" rel="noopener">Twitter</a>
+          <a class="btn btn-secondary" href="mailto:?subject={{ listing.title|urlencode }}&body={{ request.build_absolute_uri }}" target="_blank" rel="noopener">Email</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // Simple gallery thumb click behavior
+  (function(){
+    const main = document.getElementById('mainImg');
+    const thumbs = document.getElementById('thumbs');
+    if(!thumbs) return;
+    thumbs.addEventListener('click', function(e){
+      const btn = e.target.closest('button[data-src]');
+      if(!btn) return;
+      const src = btn.getAttribute('data-src');
+      if(src){
+        main.src = src;
+      }
+    });
+
+    // keyboard left/right to cycle
+    let thumbButtons = Array.from(thumbs.querySelectorAll('button[data-src]'));
+    let currentIndex = 0;
+    function setIndex(i){
+      if(!thumbButtons.length) return;
+      currentIndex = (i + thumbButtons.length) % thumbButtons.length;
+      main.src = thumbButtons[currentIndex].getAttribute('data-src');
+    }
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowLeft') setIndex(currentIndex - 1);
+      if(e.key === 'ArrowRight') setIndex(currentIndex + 1);
+    });
+  })();
+</script>
 {% endblock %}

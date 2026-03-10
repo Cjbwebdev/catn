@@ -2,7 +2,9 @@ from django.core.management.base import BaseCommand
 from scraping.scrapers.gumtree_playwright import GumtreeScraper
 from scraping.services import save_listings
 from listings.models import SourceSite
-
+from scraping.scrapers.ebay_playwright import EbayScraper
+from scraping.scrapers.motors_playwright import MotorsScraper
+from scraping.scrapers.autotrader_playwright import AutoTraderScraper
 
 class Command(BaseCommand):
 
@@ -12,6 +14,9 @@ class Command(BaseCommand):
 
         scrapers = [
             GumtreeScraper(),
+            EbayScraper(),
+            MotorsScraper(),
+            AutoTraderScraper(),
         ]
 
         total = 0
@@ -24,7 +29,7 @@ class Command(BaseCommand):
                 name=scraper.source_name
             )
 
-            listings = scraper.run(headless=True)
+            listings = scraper.run(headless=False)
 
             print("Listings scraped:", len(listings))
 

@@ -1,6 +1,6 @@
 from scraping.playwright_driver import get_playwright_context
 import os, json, sys
-
+import re
 
 class GumtreeScraper:
 
@@ -102,7 +102,7 @@ class GumtreeScraper:
                     "external_id": it["link"],
                     "title": it["title"],
                     "description": "",
-                    "price": float(it["price"]) if it["price"] else None,
+                    "price": float(re.search(r"£([\d,]+)", it.get("price") or it.get("title") or "").group(1).replace(",","")) if re.search(r"£([\d,]+)", it.get("price") or it.get("title") or "") else None,
                     "location": "",
                     "listing_url": it["link"],
                     "image_urls": [it["img"]] if it["img"] else [],
